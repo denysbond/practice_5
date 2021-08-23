@@ -2,27 +2,54 @@ import React from "react";
 import WeatherDay from "./WeatherDay";
 import WeatherDetails from "./WeatherDetails";
 
-import { daysShort } from "../api/data-generator";
 import { connect } from "react-redux";
+import { fetchWeekForecast } from "../actions/week-forecast";
+import ErrorLogger from "./ErrorLogger";
 
 class Weather extends React.Component {
-    render() {
-        return (
-            <div className="weather">
-                <ul className="list-inline mx-auto">
-                    {daysShort.map(day => (
-                        <WeatherDay
-                            day={day}
-                            key={day.dt} />
-                    ))}
-                </ul>
-                <WeatherDetails />
+  componentDidMount() {
+    this.props.fetchWeekForecast();
+  }
+
+  render() {
+    return (
+      <div className="weather">
+        {this.props.weekLoading ? (
+          <div className="weather">
+            <span className="fa fa-spinner fa-spin"></span>
+          </div>
+        ) : (
+          <div>
+            <ul className="list-inline mx-auto">
+              {this.props.weekForecast.map((day) => (
+                <WeatherDay day={day} key={day.dt} />
+              ))}
+            </ul>
+            <WeatherDetails />
+          </div>
+        )}
+
+        {this.props.weekError && (
+          <div className="weather">
+            <div className="error">
+              Error occurred during data fetch. Try to{" "}
+              <button onClick={this.props.fetchWeekForecast}>reload</button>
             </div>
-        )
-    }
+          </div>
+        )}
+
+        <ErrorLogger />
+      </div>
+    );
+  }
 }
 
-const mapStateToProps = state => ({});
-const mapDispatchToProps = dispatch => ({});
+const mapStateToProps = (state) => {
+  return {
+    weekLoading: state.weekReducer.loading,
+    weekError: state.weekReducer.error,
+    weekForecast: state.weekReducer.data,
+  };
+};
 
-export default connect(mapStateToProps, mapDispatchToProps)(Weather);
+export default connect(mapStateToProps, { fetchWeekForecast })(Weather);
